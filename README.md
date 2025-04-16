@@ -30,7 +30,11 @@ To develop on the project, you will need:
 - A [Rust](https://www.rust-lang.org/) toolchain for rust `1.86` (this project's MSRV).
   [`rustup`](https://rustup.rs/) is recommended way to obtain this.
 - [`just`](https://github.com/casey/just) for command automation.
-- [`lychee`](https://github.com/lycheeverse/lychee), [`taplo`](https://github.com/tamasfe/taplo) and [`codespell`](https://github.com/codespell-project/codespell) for code quality enforcement.
+- [`lychee`](https://github.com/lycheeverse/lychee),
+  [`taplo`](https://github.com/tamasfe/taplo),
+  [`sqlfluff`](https://github.com/sqlfluff/sqlfluff),
+  and [`codespell`](https://github.com/codespell-project/codespell)
+  for code quality enforcement.
 
 ## Technical Requirements
 

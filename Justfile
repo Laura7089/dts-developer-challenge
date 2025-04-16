@@ -6,7 +6,7 @@ serve:
     docker compose up --build
 
 # run static checking on the application
-check: check-backend check-spelling check-formatting check-links
+check: check-backend check-spelling check-formatting check-links check-migrations
 
 # check spelling throughout the application
 check-spelling:
@@ -25,6 +25,10 @@ check-formatting:
 # run static checking on the backend
 check-backend:
     cd backend && cargo check && cargo clippy
+
+# lint SQL migrations
+check-migrations:
+    sqlfluff lint --dialect postgres backend/migrations/*
 
 # run tests on the application
 test: test-backend
