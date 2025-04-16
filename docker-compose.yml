@@ -19,6 +19,8 @@ services:
       - "--db-password-file=/run/secrets/db_password"
     depends_on:
       - database
+    ports:
+      - "8080:8080/tcp"
 
 secrets:
   db_password:

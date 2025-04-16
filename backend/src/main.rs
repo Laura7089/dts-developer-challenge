@@ -3,15 +3,20 @@
 #![deny(clippy::pedantic)]
 #![deny(missing_docs)]
 
-use std::path::PathBuf;
+use std::{path::PathBuf, sync::Arc};
 
-use axum::Router;
-use clap::Parser;
-use sqlx::{
-    Pool,
-    postgres::{PgConnectOptions, Postgres},
+use axum::{
+    Json, Router,
+    extract::{Path, State},
+    http::StatusCode,
+    response,
+    routing::get,
 };
+use clap::Parser;
+use dts_developer_challenge::{TodoStatus, TodoTask};
+use sqlx::postgres::{PgConnectOptions, PgPool};
 use tracing::{debug, info};
+use uuid::Uuid;
 
 /// Command-line arguments of the application.
 #[derive(Parser, Debug, Clone)]
@@ -71,7 +76,7 @@ async fn main() {
     }
 
     // connect to the database
-    let db_pool: Pool<Postgres> = Pool::connect_with(db_options)
+    let db_pool = PgPool::connect_with(db_options)
         .await
         .expect("failed to connect to database");
     info!(
@@ -90,10 +95,53 @@ async fn main() {
         info!("database migrations complete");
     }
 
-    let app = Router::new();
+    let app = Router::new()
+        .route("/task/{task_id}", get(get_task).post(post_task))
+        .with_state(Arc::new(db_pool));
 
     let listener = tokio::net::TcpListener::bind(opts.service_address)
         .await
         .unwrap();
     axum::serve(listener, app).await.unwrap();
+}
+
+#[tracing::instrument]
+async fn get_task(
+    State(pool): State<Arc<PgPool>>,
+    Path(task_id): Path<Uuid>,
+) -> Result<response::Json<TodoTask>, StatusCode> {
+    let task = sqlx::query_as("SELECT * FROM tasks WHERE id == ?1")
+        .bind(task_id)
+        .fetch_one(Arc::as_ref(&pool))
+        .await
+        .expect("SQL query failure");
+
+    Ok(response::Json(task))
+}
+
+#[tracing::instrument]
+async fn post_task(
+    State(pool): State<Arc<PgPool>>,
+    Path(task_id): Path<Uuid>,
+    Json(task): Json<TodoTask>,
+) -> Result<(), StatusCode> {
+    sqlx::query("INSERT INTO tasks (id, title, description, status, due) (?1, ?2, ?3, ?4, ?5)")
+        .bind(&task_id)
+        .bind(task.title())
+        .bind(task.description())
+        // TODO: implement sqlx::Encode for TodoStatus
+        .bind(match task.status {
+            TodoStatus::NotStarted => "not_started",
+            TodoStatus::InProgress => "in_progress",
+            TodoStatus::Complete => "complete",
+            TodoStatus::Cancelled => "cancelled",
+            TodoStatus::Blocked => "blocked",
+        })
+        .bind(task.due())
+        .execute(Arc::as_ref(&pool))
+        .await
+        // TODO: handle error better
+        .expect("SQL query failure");
+
+    Ok(())
 }

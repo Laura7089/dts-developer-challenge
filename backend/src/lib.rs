@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Row, postgres::PgRow};
 
 /// Status of a "to-do" item.
+// TODO: validate on deserialize
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub enum TodoStatus {
     /// Not yet started.
