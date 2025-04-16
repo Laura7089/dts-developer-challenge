@@ -6,9 +6,10 @@
 #![deny(missing_docs)]
 
 use chrono::{DateTime, TimeZone, Utc};
+use serde::{Deserialize, Serialize};
 
 /// Status of a "to-do" item.
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub enum TodoStatus {
     /// Not yet started.
     ///
@@ -28,7 +29,7 @@ pub enum TodoStatus {
 /// "To-do" task.
 ///
 /// Create a new one with [`TodoTask::new`].
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct TodoTask {
     /// Title of the task.
     ///
