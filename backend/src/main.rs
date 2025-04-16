@@ -23,8 +23,11 @@ struct Opt {
     #[clap(long, default_value_t = 5432)]
     db_port: u16,
     /// Name of the database to open in Postgres.
-    #[clap(long, default_value = "tasks_db")]
-    db_name: String,
+    #[clap(long)]
+    db_name: Option<String>,
+    /// Username to access the Postgres database as.
+    #[clap(long, default_value = "postgres")]
+    db_user: String,
     /// Password for write access to the database in Postgres.
     #[clap(long)]
     db_password: Option<String>,
@@ -42,14 +45,19 @@ async fn main() {
 
     let opts = Opt::parse();
 
-    // connect to the database
+    // assemble connection options
     let mut db_options = PgConnectOptions::new()
-        .database(&opts.db_name)
         .host(&opts.db_host)
-        .port(opts.db_port);
+        .port(opts.db_port)
+        .username(&opts.db_user);
     if let Some(db_pass) = opts.db_password {
         db_options = db_options.password(&db_pass);
     }
+    if let Some(db_name) = opts.db_name {
+        db_options = db_options.database(&db_name);
+    }
+
+    // connect to the database
     let db_pool: Pool<Postgres> = Pool::connect_with(db_options)
         .await
         .expect("failed to connect to database");

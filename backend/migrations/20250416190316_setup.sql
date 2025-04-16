@@ -1,5 +1,3 @@
-CREATE DATABASE tasks_db;
-
 CREATE TYPE task_status AS ENUM
 ('not_started', 'in_progress', 'complete', 'cancelled', 'blocked');
 
