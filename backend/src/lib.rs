@@ -133,36 +133,34 @@ impl TodoTask {
 #[cfg(test)]
 mod tests {
     use chrono::TimeDelta;
+    use rstest::*;
 
     use super::*;
 
-    #[test]
-    fn set_title() {
+    #[fixture]
+    pub fn sample_task() -> TodoTask {
         let due = Utc::now() + TimeDelta::hours(12);
-        let mut task = TodoTask::new("my title".to_string(), None, TodoStatus::InProgress, &due);
+        TodoTask::new("my title".to_string(), None, TodoStatus::InProgress, &due)
+    }
 
+    #[rstest]
+    fn set_title(mut sample_task: TodoTask) {
         let new_title = "Another new title!";
-        task.set_title(new_title.to_string());
-        assert_eq!(task.title(), new_title);
+        sample_task.set_title(new_title.to_string());
+        assert_eq!(sample_task.title(), new_title);
     }
 
-    #[test]
-    fn set_description() {
-        let due = Utc::now() + TimeDelta::hours(12);
-        let mut task = TodoTask::new("my title".to_string(), None, TodoStatus::InProgress, &due);
-
+    #[rstest]
+    fn set_description(mut sample_task: TodoTask) {
         let new_description = "Another new description!";
-        task.set_description(Some(new_description.to_string()));
-        assert_eq!(task.description(), Some(new_description));
+        sample_task.set_description(Some(new_description.to_string()));
+        assert_eq!(sample_task.description(), Some(new_description));
     }
 
-    #[test]
-    fn set_due() {
-        let due = Utc::now() + TimeDelta::hours(12);
-        let mut task = TodoTask::new("my title".to_string(), None, TodoStatus::InProgress, &due);
-
+    #[rstest]
+    fn set_due(mut sample_task: TodoTask) {
         let new_due = Utc::now() + TimeDelta::days(1);
-        task.set_due(&new_due);
-        assert_eq!(task.due(), &new_due);
+        sample_task.set_due(&new_due);
+        assert_eq!(sample_task.due(), &new_due);
     }
 }
