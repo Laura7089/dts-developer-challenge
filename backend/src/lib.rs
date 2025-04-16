@@ -57,7 +57,7 @@ impl TodoTask {
         title: String,
         description: Option<String>,
         status: TodoStatus,
-        due: DateTime<TZ>,
+        due: &DateTime<TZ>,
     ) -> Self {
         let mut to_return = Self {
             // we can set `title` to an invalid value here because it will
@@ -77,6 +77,7 @@ impl TodoTask {
     }
 
     /// Get the title of the task.
+    #[must_use]
     pub fn title(&self) -> &str {
         &self.title
     }
@@ -97,6 +98,7 @@ impl TodoTask {
     /// Get the description of the task.
     ///
     /// The description can never be `Some("")`.
+    #[must_use]
     pub fn description(&self) -> Option<&str> {
         self.description.as_deref()
     }
@@ -113,6 +115,7 @@ impl TodoTask {
     }
 
     /// Get the due date & time of the task.
+    #[must_use]
     pub fn due(&self) -> &DateTime<Utc> {
         &self.due
     }
@@ -121,7 +124,7 @@ impl TodoTask {
     ///
     /// This method is generic over timezones with `TZ`.
     /// Time zone conversion is performed automatically.
-    pub fn set_due<TZ: TimeZone>(&mut self, new_due: DateTime<TZ>) {
+    pub fn set_due<TZ: TimeZone>(&mut self, new_due: &DateTime<TZ>) {
         self.due = new_due.with_timezone(&Utc);
     }
 }
