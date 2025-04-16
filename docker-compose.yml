@@ -16,7 +16,7 @@ services:
       - db_password
     command:
       - "--db-host=database"
-      - "--db-password=$(cat /run/secrets/db_password)"
+      - "--db-password-file=/run/secrets/db_password"
     depends_on:
       - database
 

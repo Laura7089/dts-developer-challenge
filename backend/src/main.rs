@@ -3,6 +3,8 @@
 #![deny(clippy::pedantic)]
 #![deny(missing_docs)]
 
+use std::path::PathBuf;
+
 use axum::Router;
 use clap::Parser;
 use sqlx::{
@@ -29,8 +31,10 @@ struct Opt {
     #[clap(long, default_value = "postgres")]
     db_user: String,
     /// Password for write access to the database in Postgres.
+    ///
+    /// Connects without password by default.
     #[clap(long)]
-    db_password: Option<String>,
+    db_password_file: Option<PathBuf>,
     /// Enable verbose logging.
     #[clap(short, long, default_value_t = false)]
     verbose: bool,
@@ -50,11 +54,12 @@ async fn main() {
         .host(&opts.db_host)
         .port(opts.db_port)
         .username(&opts.db_user);
-    if let Some(db_pass) = opts.db_password {
-        db_options = db_options.password(&db_pass);
-    }
     if let Some(db_name) = opts.db_name {
         db_options = db_options.database(&db_name);
+    }
+    if let Some(path) = opts.db_password_file {
+        let password = std::fs::read_to_string(path).expect("failed to read DB password file");
+        db_options = db_options.password(password.trim());
     }
 
     // connect to the database
