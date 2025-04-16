@@ -11,6 +11,7 @@ use sqlx::{
     Pool,
     postgres::{PgConnectOptions, Postgres},
 };
+use tracing::{debug, info};
 
 /// Command-line arguments of the application.
 #[derive(Parser, Debug, Clone)]
@@ -44,8 +45,11 @@ struct Opt {
 }
 
 #[tokio::main]
+#[tracing::instrument]
 async fn main() {
     tracing_subscriber::fmt::init();
+
+    info!("starting application");
 
     let opts = Opt::parse();
 
@@ -58,6 +62,10 @@ async fn main() {
         db_options = db_options.database(&db_name);
     }
     if let Some(path) = opts.db_password_file {
+        debug!(
+            "read database password from {}",
+            path.as_os_str().to_string_lossy()
+        );
         let password = std::fs::read_to_string(path).expect("failed to read DB password file");
         db_options = db_options.password(password.trim());
     }
@@ -66,13 +74,20 @@ async fn main() {
     let db_pool: Pool<Postgres> = Pool::connect_with(db_options)
         .await
         .expect("failed to connect to database");
+    info!(
+        "database connection pool established at {}:{}",
+        opts.db_host, opts.db_port
+    );
 
     // run database migrations, if enabled
-    if !opts.skip_migrations {
+    if opts.skip_migrations {
+        info!("skipping database migrations");
+    } else {
         sqlx::migrate!("./migrations")
             .run(&db_pool)
             .await
             .expect("migrations run failed");
+        info!("database migrations complete");
     }
 
     let app = Router::new();
