@@ -28,7 +28,21 @@ pub enum TodoStatus {
 
 /// "To-do" task.
 ///
-/// Create a new one with [`TodoTask::new`].
+/// Create a new task with [`TodoTask::new`]:
+///
+/// ```
+/// use chrono::{TimeDelta, Utc};
+/// use dts_developer_challenge::{TodoTask, TodoStatus};
+///
+/// // create a due date twelve hours from now
+/// let due = Utc::now() + TimeDelta::hours(12);
+/// let task = TodoTask::new(
+///     "My title".to_string(),
+///     Some("My description".to_string()),
+///     TodoStatus::InProgress,
+///     &due,
+/// );
+/// ```
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct TodoTask {
     /// Title of the task.
