@@ -9,7 +9,7 @@ use chrono::{DateTime, TimeZone, Utc};
 use serde::{Deserialize, Serialize};
 
 /// Status of a "to-do" item.
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub enum TodoStatus {
     /// Not yet started.
     ///
@@ -127,5 +127,42 @@ impl TodoTask {
     /// Time zone conversion is performed automatically.
     pub fn set_due<TZ: TimeZone>(&mut self, new_due: &DateTime<TZ>) {
         self.due = new_due.with_timezone(&Utc);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use chrono::TimeDelta;
+
+    use super::*;
+
+    #[test]
+    fn set_title() {
+        let due = Utc::now() + TimeDelta::hours(12);
+        let mut task = TodoTask::new("my title".to_string(), None, TodoStatus::InProgress, &due);
+
+        let new_title = "Another new title!";
+        task.set_title(new_title.to_string());
+        assert_eq!(task.title(), new_title);
+    }
+
+    #[test]
+    fn set_description() {
+        let due = Utc::now() + TimeDelta::hours(12);
+        let mut task = TodoTask::new("my title".to_string(), None, TodoStatus::InProgress, &due);
+
+        let new_description = "Another new description!";
+        task.set_description(Some(new_description.to_string()));
+        assert_eq!(task.description(), Some(new_description));
+    }
+
+    #[test]
+    fn set_due() {
+        let due = Utc::now() + TimeDelta::hours(12);
+        let mut task = TodoTask::new("my title".to_string(), None, TodoStatus::InProgress, &due);
+
+        let new_due = Utc::now() + TimeDelta::days(1);
+        task.set_due(&new_due);
+        assert_eq!(task.due(), &new_due);
     }
 }
