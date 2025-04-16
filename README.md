@@ -9,9 +9,6 @@ To run the project, you will need:
 - An OCI/[Docker](https://www.docker.com/) compatible runtime; [docker engine](https://docs.docker.com/engine/) or [podman](https://podman.io/) are recommended.
 - [`just`](https://github.com/casey/just).
   *Optional - manual commands are provided below*.
-- A [Rust](https://www.rust-lang.org/) toolchain for rust `1.86` (this project's MSRV).
-  [`rustup`](https://rustup.rs/) is recommended way to obtain this.
-  *Optional - this is not required unless you wish to run the test suite or debug the backend locally*.
 
 ### Automatic
 
@@ -25,6 +22,15 @@ If `just` is not available or desirable, then the user should follow these steps
 1. Generate or otherwise create a suitable database password and store it in the root of this repo at `db_password.txt`.
 2. Run the application with `docker compose up`.
 3. Navigate to [the default frontend endpoint](http://localhost:8080) and enjoy!
+
+## Development
+
+To develop on the project, you will need:
+
+- A [Rust](https://www.rust-lang.org/) toolchain for rust `1.86` (this project's MSRV).
+  [`rustup`](https://rustup.rs/) is recommended way to obtain this.
+- [`just`](https://github.com/casey/just) for command automation.
+- [`lychee`](https://github.com/lycheeverse/lychee), [`taplo`](https://github.com/tamasfe/taplo) and [`codespell`](https://github.com/codespell-project/codespell) for code quality enforcement.
 
 ## Technical Requirements
 
