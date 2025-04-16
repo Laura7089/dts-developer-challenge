@@ -1,6 +1,6 @@
 //! Backend application to serve [`TodoTask`] objects over HTTP.
 
-#![warn(clippy::pedantic)]
+#![deny(clippy::pedantic)]
 #![deny(missing_docs)]
 
 use axum::Router;

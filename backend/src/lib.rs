@@ -2,7 +2,7 @@
 //!
 //! See [`TodoTask`] for usage.
 
-#![warn(clippy::pedantic)]
+#![deny(clippy::pedantic)]
 #![deny(missing_docs)]
 
 use chrono::{DateTime, TimeZone, Utc};
