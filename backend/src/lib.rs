@@ -151,10 +151,22 @@ mod tests {
     }
 
     #[rstest]
+    #[should_panic]
+    fn empty_title(mut sample_task: TodoTask) {
+        sample_task.set_title(String::new());
+    }
+
+    #[rstest]
     fn set_description(mut sample_task: TodoTask) {
         let new_description = "Another new description!";
         sample_task.set_description(Some(new_description.to_string()));
         assert_eq!(sample_task.description(), Some(new_description));
+    }
+
+    #[rstest]
+    #[should_panic]
+    fn empty_description(mut sample_task: TodoTask) {
+        sample_task.set_description(Some(String::new()));
     }
 
     #[rstest]
