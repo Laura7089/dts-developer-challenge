@@ -14,6 +14,12 @@ services:
       context: ./backend
     secrets:
       - db_password
+    command:
+      - "--db-address=database:5432"
+      - "--db-password=$(cat /run/secrets/db_password)"
+      - "0.0.0.0:8080"
+    depends_on:
+      - database
 
 secrets:
   db_password:
