@@ -1,0 +1,13 @@
+services:
+  database:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD_FILE: "/run/secrets/db_password"
+    shm_size: 128mb
+    secrets:
+      - db_password
+
+secrets:
+  db_password:
+    file: "db_password.txt"

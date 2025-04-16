@@ -2,6 +2,17 @@
 
 This repository contains my submission for the [DTS Developer Technical Test](https://github.com/hmcts/dts-developer-challenge).
 
+## Usage
+
+For convenience, this repository provides command-running shortcuts using [`just`](https://github.com/casey/just).
+The application can be served at [`localhost:8080`](http://localhost:8080) with `just serve`.
+
+If `just` is not available or desirable, then the user should follow these steps:
+
+1. Generate or otherwise create a suitable database password and store it in the root of this repo at `db_password.txt`.
+2. Run the application with `docker compose up`.
+3. Navigate to [the default frontend endpoint](http://localhost:8080) and enjoy!
+
 ## Requirements
 
 ### Backend API
