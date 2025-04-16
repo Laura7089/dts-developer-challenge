@@ -32,26 +32,26 @@ If `just` is not available or desirable, then the user should follow these steps
 
 The backend should be able to:
 
- - Create a task with the following properties:
+- [ ] Create a task with the following properties:
    - Title
    - Description (optional field)
    - Status
    - Due date/time
- - Retrieve a task by ID
- - Retrieve all tasks
- - Update the status of a task
- - Delete a task
+- [ ] Retrieve a task by ID
+- [ ] Retrieve all tasks
+- [ ] Update the status of a task
+- [ ] Delete a task
 
 ### Frontend Application
 
 The frontend should be able to:
 
-- Create, view, update, and delete tasks
-- Display tasks in a user-friendly interface
+- [ ] Create, view, update, and delete tasks
+- [ ] Display tasks in a user-friendly interface
 
 ### General
 
-- Implement unit tests
-- Store data in a database
-- Include validation and error handling
-- Document API endpoints
+- [ ] Implement unit tests
+- [ ] Store data in a database
+- [ ] Include validation and error handling
+- [ ] Document API endpoints
