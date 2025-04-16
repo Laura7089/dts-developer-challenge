@@ -67,6 +67,10 @@ impl TodoTask {
     /// Requirements of arguments:
     /// - `title` may not be empty
     /// - `description` may not be `Some` *and* empty
+    ///
+    /// # Panics
+    ///
+    /// Panics if the above invariants are not upheld.
     // TODO: builder API?
     pub fn new<TZ: TimeZone>(
         title: String,
