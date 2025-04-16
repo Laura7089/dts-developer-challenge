@@ -142,6 +142,12 @@ impl TodoTask {
     pub fn set_due<TZ: TimeZone>(&mut self, new_due: &DateTime<TZ>) {
         self.due = new_due.with_timezone(&Utc);
     }
+
+    /// Check if this task is past due.
+    #[must_use]
+    pub fn past_due(&self) -> bool {
+        self.due < Utc::now()
+    }
 }
 
 #[cfg(test)]
@@ -188,5 +194,14 @@ mod tests {
         let new_due = Utc::now() + TimeDelta::days(1);
         sample_task.set_due(&new_due);
         assert_eq!(sample_task.due(), &new_due);
+    }
+
+    #[rstest]
+    fn past_due(mut sample_task: TodoTask) {
+        sample_task.set_due(&(Utc::now() - TimeDelta::days(1)));
+        assert!(sample_task.past_due());
+
+        sample_task.set_due(&(Utc::now() + TimeDelta::days(1)));
+        assert!(!sample_task.past_due());
     }
 }
