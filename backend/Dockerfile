@@ -5,17 +5,20 @@ FROM rust:1.86 AS builder
 COPY . /application
 WORKDIR /application
 
-# build backend
-RUN cargo build --release
+# build the backend with cached artefacts, then move the final product out the cache
+RUN \
+  --mount=type=cache,target=/application/target \
+  --mount=type=cache,target=/usr/local/cargo/registry \
+  cargo build --release --locked && \
+  mv ./target/release/dts_developer_challenge release_build
 
 # base the container on debian bookworm
 FROM debian:bookworm
 
 # copy in the built application and make it executable
-COPY --from=builder \
-  /application/target/release/dts_developer_challenge \
+COPY --from=builder --chmod=0755 \
+  /application/release_build \
   /usr/bin/dts_developer_challenge
-RUN chmod 0755 /usr/bin/dts_developer_challenge
 
 # create a low-privilege user:
 # - it does not need a home directory
@@ -33,4 +36,4 @@ USER webuser
 EXPOSE 8080/tcp
 
 # run the service and attach to it
-ENTRYPOINT "/usr/bin/dts_developer_challenge"
+ENTRYPOINT ["/usr/bin/dts_developer_challenge"]

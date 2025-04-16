@@ -1,1 +1,3 @@
 target
+# ignore the toolchain file because we already pin the rust verion in Dockerfile
+rust-toolchain.toml
