@@ -13,10 +13,11 @@ use axum::{
     routing::get,
 };
 use clap::Parser;
-use dts_developer_challenge::{TodoStatus, TodoTask};
 use sqlx::postgres::{PgConnectOptions, PgPool};
 use tracing::{debug, info};
 use uuid::Uuid;
+
+use dts_developer_challenge::{TodoStatus, TodoTask, TodoTaskUnchecked};
 
 /// Command-line arguments of the application.
 #[derive(Parser, Debug, Clone)]
@@ -123,10 +124,15 @@ async fn get_task(
 async fn post_task(
     State(pool): State<Arc<PgPool>>,
     Path(task_id): Path<Uuid>,
-    Json(task): Json<TodoTask>,
+    Json(task): Json<TodoTaskUnchecked>,
 ) -> Result<(), StatusCode> {
+    // validate the task
+    let Ok(task) = TodoTask::try_from(task) else {
+        return Err(StatusCode::BAD_REQUEST);
+    };
+
     sqlx::query("INSERT INTO tasks (id, title, description, status, due) (?1, ?2, ?3, ?4, ?5)")
-        .bind(&task_id)
+        .bind(task_id)
         .bind(task.title())
         .bind(task.description())
         // TODO: implement sqlx::Encode for TodoStatus

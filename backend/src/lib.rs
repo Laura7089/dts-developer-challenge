@@ -10,7 +10,6 @@ use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Row, postgres::PgRow};
 
 /// Status of a "to-do" item.
-// TODO: validate on deserialize
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub enum TodoStatus {
     /// Not yet started.
@@ -45,7 +44,7 @@ pub enum TodoStatus {
 ///     &due,
 /// );
 /// ```
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize)]
 pub struct TodoTask {
     /// Title of the task.
     ///
@@ -171,6 +170,45 @@ impl FromRow<'_, PgRow> for TodoTask {
                 other => panic!("db returned unknown TodoStatus variant: {other}"),
             },
             due: row.try_get("due")?,
+        })
+    }
+}
+
+/// Unchecked version of [`TodoTask`].
+///
+/// Intended for upholding invariants from deserialization.
+/// Use [`Self::try_from`] to validate and convert to a [`TodoTask`].
+#[derive(Deserialize, Clone, Debug)]
+pub struct TodoTaskUnchecked {
+    title: String,
+    description: Option<String>,
+    status: TodoStatus,
+    due: DateTime<Utc>,
+}
+
+impl TryFrom<TodoTaskUnchecked> for TodoTask {
+    type Error = &'static str;
+
+    fn try_from(value: TodoTaskUnchecked) -> Result<Self, Self::Error> {
+        let TodoTaskUnchecked {
+            title,
+            description,
+            status,
+            due,
+        } = value;
+        Ok(Self {
+            title: if title.is_empty() {
+                return Err("title cannot be empty");
+            } else {
+                title
+            },
+            description: if matches!(description.as_deref(), Some("")) {
+                return Err("description cannot be empty");
+            } else {
+                description
+            },
+            status,
+            due,
         })
     }
 }
