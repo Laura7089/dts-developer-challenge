@@ -12,6 +12,8 @@ services:
   backend:
     build:
       context: ./backend
+    environment:
+      RUST_LOG: info
     secrets:
       - db_password
     command:

@@ -13,7 +13,7 @@ use axum::{
 };
 use clap::Parser;
 use sqlx::postgres::{PgConnectOptions, PgPool};
-use tracing::{debug, info};
+use tracing::{debug, error, info};
 use uuid::Uuid;
 
 use dts_developer_challenge::{TodoTask, TodoTaskUnchecked};
@@ -41,9 +41,6 @@ struct Opt {
     /// Connects without password by default.
     #[clap(long)]
     db_password_file: Option<PathBuf>,
-    /// Enable verbose logging.
-    #[clap(short, long, default_value_t = false)]
-    verbose: bool,
     /// Skip running the database migrations on startup.
     #[clap(long, default_value_t = false)]
     skip_migrations: bool,
@@ -52,11 +49,13 @@ struct Opt {
 #[tokio::main]
 #[tracing::instrument]
 async fn main() {
-    tracing_subscriber::fmt::init();
+    // parse CLI options
+    let opts = Opt::parse();
+
+    // initialise logging
+    tracing_subscriber::fmt().init();
 
     info!("starting application");
-
-    let opts = Opt::parse();
 
     // assemble connection options
     let mut db_options = PgConnectOptions::new()
@@ -80,8 +79,9 @@ async fn main() {
         .await
         .expect("failed to connect to database");
     info!(
-        "database connection pool established at {}:{}",
-        opts.db_host, opts.db_port
+        host = opts.db_host,
+        port = opts.db_port,
+        "database connection pool established",
     );
 
     // run database migrations, if enabled
@@ -102,8 +102,10 @@ async fn main() {
 
     let listener = tokio::net::TcpListener::bind(opts.service_address)
         .await
-        .unwrap();
-    axum::serve(listener, app).await.unwrap();
+        .expect("failed to bind listen address");
+    axum::serve(listener, app)
+        .await
+        .expect("application serve failure");
 }
 
 #[tracing::instrument]
@@ -120,8 +122,16 @@ async fn get_task(
 
     match query.fetch_one(Arc::as_ref(&pool)).await {
         Ok(task) => Ok(Json(task)),
+        // if the database returned no row, then the ID doesn't exist
         Err(sqlx::Error::RowNotFound) => Err(StatusCode::NOT_FOUND),
-        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
+        Err(e) => {
+            error!(
+                task_id = format!("{task_id}"),
+                error = format!("{e}"),
+                "database error trying to get task"
+            );
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
+        }
     }
 }
 
@@ -131,8 +141,12 @@ async fn post_task(
     Json(task): Json<TodoTaskUnchecked>,
 ) -> Result<String, StatusCode> {
     // validate the task
-    let Ok(task) = TodoTask::try_from(task) else {
-        return Err(StatusCode::BAD_REQUEST);
+    let task = match TodoTask::try_from(task) {
+        Ok(t) => t,
+        Err(e) => {
+            debug!(error = format!("{e}"), "malformed task received");
+            return Err(StatusCode::BAD_REQUEST);
+        }
     };
 
     let task_id = Uuid::new_v4();
@@ -149,6 +163,12 @@ async fn post_task(
 
     match query.execute(Arc::as_ref(&pool)).await {
         Ok(_) => Ok(format!("{task_id}")),
-        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
+        Err(e) => {
+            error!(
+                error = format!("{e}"),
+                "database error trying to create task"
+            );
+            Err(StatusCode::INTERNAL_SERVER_ERROR)
+        }
     }
 }
