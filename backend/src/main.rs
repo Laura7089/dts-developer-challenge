@@ -9,8 +9,7 @@ use axum::{
     Json, Router,
     extract::{Path, State},
     http::StatusCode,
-    response,
-    routing::get,
+    routing::{get, post},
 };
 use clap::Parser;
 use sqlx::postgres::{PgConnectOptions, PgPool};
@@ -97,7 +96,8 @@ async fn main() {
     }
 
     let app = Router::new()
-        .route("/task/{task_id}", get(get_task).post(post_task))
+        .route("/task/{task_id}", get(get_task))
+        .route("/task", post(post_task))
         .with_state(Arc::new(db_pool));
 
     let listener = tokio::net::TcpListener::bind(opts.service_address)
@@ -110,33 +110,34 @@ async fn main() {
 async fn get_task(
     State(pool): State<Arc<PgPool>>,
     Path(task_id): Path<Uuid>,
-) -> Result<response::Json<TodoTask>, StatusCode> {
-    let task = sqlx::query_as(
+) -> Result<Json<TodoTask>, StatusCode> {
+    let query = sqlx::query_as(
         r#"SELECT title, description, status as "status: TodoStatus", due
         FROM tasks
         WHERE id = $1"#,
     )
-    .bind(task_id)
-    .fetch_one(Arc::as_ref(&pool))
-    .await
-    .expect("SQL query failure");
+    .bind(task_id);
 
-    Ok(response::Json(task))
+    match query.fetch_one(Arc::as_ref(&pool)).await {
+        Ok(task) => Ok(Json(task)),
+        Err(sqlx::Error::RowNotFound) => Err(StatusCode::NOT_FOUND),
+        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
+    }
 }
 
 #[tracing::instrument]
 async fn post_task(
     State(pool): State<Arc<PgPool>>,
-    Path(task_id): Path<Uuid>,
     Json(task): Json<TodoTaskUnchecked>,
-) -> Result<(), StatusCode> {
+) -> Result<String, StatusCode> {
     // validate the task
     let Ok(task) = TodoTask::try_from(task) else {
         return Err(StatusCode::BAD_REQUEST);
     };
 
+    let task_id = Uuid::new_v4();
     let status = task.status;
-    sqlx::query!(
+    let query = sqlx::query!(
         "INSERT INTO tasks (id, title, description, status, due)
         VALUES ($1, $2, $3, $4, $5);",
         task_id,
@@ -144,11 +145,10 @@ async fn post_task(
         task.description(),
         status as _,
         task.due(),
-    )
-    .execute(Arc::as_ref(&pool))
-    .await
-    // TODO: handle error better
-    .expect("SQL query failure");
+    );
 
-    Ok(())
+    match query.execute(Arc::as_ref(&pool)).await {
+        Ok(_) => Ok(format!("{task_id}")),
+        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
+    }
 }
