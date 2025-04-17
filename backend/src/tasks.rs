@@ -1,10 +1,3 @@
-//! Library for communicating about "to-do" objects with a database.
-//!
-//! See [`TodoTask`] for usage.
-
-#![deny(clippy::pedantic)]
-#![deny(missing_docs)]
-
 use chrono::{DateTime, TimeZone, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, Row, postgres::PgRow, prelude::Type};
