@@ -11,6 +11,8 @@ use sqlx::{FromRow, Row, postgres::PgRow, prelude::Type};
 
 /// Status of a "to-do" item.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, Type)]
+#[sqlx(type_name = "todo_status")]
+#[sqlx(rename_all = "snake_case")]
 pub enum TodoStatus {
     /// Not yet started.
     ///

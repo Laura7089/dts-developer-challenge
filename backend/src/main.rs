@@ -111,11 +111,15 @@ async fn get_task(
     State(pool): State<Arc<PgPool>>,
     Path(task_id): Path<Uuid>,
 ) -> Result<response::Json<TodoTask>, StatusCode> {
-    let task = sqlx::query_as("SELECT * FROM tasks WHERE id == ?1")
-        .bind(task_id)
-        .fetch_one(Arc::as_ref(&pool))
-        .await
-        .expect("SQL query failure");
+    let task = sqlx::query_as(
+        r#"SELECT title, description, status as "status: TodoStatus", due
+        FROM tasks
+        WHERE id = $1"#,
+    )
+    .bind(task_id)
+    .fetch_one(Arc::as_ref(&pool))
+    .await
+    .expect("SQL query failure");
 
     Ok(response::Json(task))
 }
@@ -132,16 +136,19 @@ async fn post_task(
     };
 
     let status = task.status.clone();
-    sqlx::query("INSERT INTO tasks (id, title, description, status, due) (?1, ?2, ?3, ?4, ?5)")
-        .bind(task_id)
-        .bind(task.title())
-        .bind(task.description())
-        .bind(status)
-        .bind(task.due())
-        .execute(Arc::as_ref(&pool))
-        .await
-        // TODO: handle error better
-        .expect("SQL query failure");
+    sqlx::query!(
+        "INSERT INTO tasks (id, title, description, status, due)
+        VALUES ($1, $2, $3, $4, $5);",
+        task_id,
+        task.title(),
+        task.description(),
+        status as _,
+        task.due(),
+    )
+    .execute(Arc::as_ref(&pool))
+    .await
+    // TODO: handle error better
+    .expect("SQL query failure");
 
     Ok(())
 }
