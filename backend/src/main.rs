@@ -135,7 +135,7 @@ async fn post_task(
         return Err(StatusCode::BAD_REQUEST);
     };
 
-    let status = task.status.clone();
+    let status = task.status;
     sqlx::query!(
         "INSERT INTO tasks (id, title, description, status, due)
         VALUES ($1, $2, $3, $4, $5);",
