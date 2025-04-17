@@ -7,10 +7,10 @@
 
 use chrono::{DateTime, TimeZone, Utc};
 use serde::{Deserialize, Serialize};
-use sqlx::{FromRow, Row, postgres::PgRow};
+use sqlx::{FromRow, Row, postgres::PgRow, prelude::Type};
 
 /// Status of a "to-do" item.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, Type)]
 pub enum TodoStatus {
     /// Not yet started.
     ///
@@ -160,15 +160,7 @@ impl FromRow<'_, PgRow> for TodoTask {
         Ok(Self {
             title: row.try_get("title")?,
             description: row.try_get("description")?,
-            // TODO: implement sqlx::Type for TodoStatus?
-            status: match row.try_get("status")? {
-                "not_started" => TodoStatus::NotStarted,
-                "in_progress" => TodoStatus::InProgress,
-                "complete" => TodoStatus::Complete,
-                "cancelled" => TodoStatus::Cancelled,
-                "blocked" => TodoStatus::Blocked,
-                other => panic!("db returned unknown TodoStatus variant: {other}"),
-            },
+            status: row.try_get("status")?,
             due: row.try_get("due")?,
         })
     }

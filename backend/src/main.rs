@@ -17,7 +17,7 @@ use sqlx::postgres::{PgConnectOptions, PgPool};
 use tracing::{debug, info};
 use uuid::Uuid;
 
-use dts_developer_challenge::{TodoStatus, TodoTask, TodoTaskUnchecked};
+use dts_developer_challenge::{TodoTask, TodoTaskUnchecked};
 
 /// Command-line arguments of the application.
 #[derive(Parser, Debug, Clone)]
@@ -131,18 +131,12 @@ async fn post_task(
         return Err(StatusCode::BAD_REQUEST);
     };
 
+    let status = task.status.clone();
     sqlx::query("INSERT INTO tasks (id, title, description, status, due) (?1, ?2, ?3, ?4, ?5)")
         .bind(task_id)
         .bind(task.title())
         .bind(task.description())
-        // TODO: implement sqlx::Encode for TodoStatus
-        .bind(match task.status {
-            TodoStatus::NotStarted => "not_started",
-            TodoStatus::InProgress => "in_progress",
-            TodoStatus::Complete => "complete",
-            TodoStatus::Cancelled => "cancelled",
-            TodoStatus::Blocked => "blocked",
-        })
+        .bind(status)
         .bind(task.due())
         .execute(Arc::as_ref(&pool))
         .await
